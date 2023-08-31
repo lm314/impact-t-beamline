@@ -60,10 +60,10 @@ def block_negative_velocity(func):
         arg_names = argspec.args
         
         # Filter positional arguments based on their type
-        myclass_args = [arg for arg in args if isinstance(arg, ImpactT_Beamline)]
+        myclass_args = [arg for arg in args if isinstance(arg, ImpactTBeamline)]
         
         # Filter keyword arguments based on their type
-        myclass_kwargs = {k: v for k, v in kwargs.items() if isinstance(v, ImpactT_Beamline)}
+        myclass_kwargs = {k: v for k, v in kwargs.items() if isinstance(v, ImpactTBeamline)}
         
         # Print the MyClass arguments
         temp_beamline = myclass_args[0]
