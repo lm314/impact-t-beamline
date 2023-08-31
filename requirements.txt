@@ -1,0 +1,5 @@
+numpy
+pandas
+yaml
+beamline_configuration
+pyPartAnalysis
