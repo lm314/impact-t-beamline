@@ -17,9 +17,9 @@ classifiers = [
 dependencies = [
 	"yaml",
 	"numpy",
-	"pandas"
-	"beamline_configuration"
-	"pyPartAnalysis"
+	"pandas",
+	"beamline_configuration",
+	"pyPartAnalysis",
 ]
 requires-python = ">=3.7"
 
