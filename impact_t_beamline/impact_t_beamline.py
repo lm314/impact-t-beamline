@@ -6,6 +6,7 @@ import numpy as np
 import yaml
 import inspect
 import pandas as pd
+from scipy.interpolate import CubicSpline
 
 from beamline_configuration import BeamlineConfiguration
 import pyPartAnalysis.read as rd
@@ -172,7 +173,24 @@ class ImpactTBeamline:
             result.append(df.iloc[np.argmin(np.abs(z - z_pos))])
         
         return pd.DataFrame(result)
-    
+        
+	def getFort_z_pos_cubic_spline(self,fort_num,z_pos_list,columns):
+        # gets the pandas columns at the z_pos_list positions using cubic 
+        # splines to interpolate
+        df = self.getFort(fort_num=fort_num)
+        #fort 18 uses dist instead of z
+        
+        if fort_num == 18:
+            z = df['dist']
+        else:
+            z = df['z']
+            
+        vals = df[columns].values
+        
+        cs = CubicSpline(z, vals,extrapolate=False)
+        
+        return cs(z_pos_list)  
+        
     def get_distgen_settings(self):
         # get variables intented for the distgen file
             settings_combi = BeamlineConfiguration.split(self.settings)
