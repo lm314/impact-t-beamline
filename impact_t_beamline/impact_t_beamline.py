@@ -83,7 +83,7 @@ def block_negative_velocity(func):
     return wrapper
 
 class ImpactTBeamline:
-    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None):
+    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,has_particle_id=True):
         # settings is the dictionary output by the BeamlineConfiguration.gen method
         # gen is a distgen Generator
         self.settings = settings
@@ -97,15 +97,20 @@ class ImpactTBeamline:
             self.run_dir = os.getcwd()
         else:
             self.run_dir = run_dir
+        self.has_particle_id = has_particle_id
     
     def callImpactT(self):
         # calls IMPACT-T executable via mpirun
         temp = subprocess.check_call(f"mpirun -n {self.num_process} {self.impact_exe_path} > output.txt",
-                                       shell=True,
-                                       cwd=self.run_dir,
-                                       stdout=subprocess.DEVNULL,
-                                       stderr=subprocess.DEVNULL,
-                                       timeout=self.timeout) 
+                                      shell=True,
+                                      cwd=self.run_dir,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL,
+                                      timeout=self.timeout) 
+                # temp = subprocess.check_call(f"mpirun -n {self.num_process} -c {self.num_process} {self.impact_exe_path} > output.txt",
+                #                       shell=True,
+                #                       cwd=self.run_dir,
+                #                       timeout=self.timeout) 
     
     def makeImpactIn(self,impact_file_name = 'ImpactT.in'):
         # generates an ImpactT.in file with the values substituted in for the variables
@@ -137,11 +142,10 @@ class ImpactTBeamline:
             distgen_settings = self.get_distgen_settings()
 
             for key,val in distgen_settings.items():
-                print(key)
                 self.gen[key] = val
             pg = self.gen.run()
             pg.drift_to_t(pg['mean_t'])
-            pg.write_impact(os.path.join(self.run_dir,file_name))
+            pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id)
     
     def getFort(self,fort_num):
         # reads summary IMPACT-T file into a pandas DataFrame, i.e. not distribution files
@@ -152,7 +156,7 @@ class ImpactTBeamline:
         # reads an IMPACT-T distribution file into a pandas DataFrame
         file_name = os.path.join(self.run_dir,f'fort.{fort_num}')
         return rd.read_GB(file_name)
-    
+        
     def getFort_z_pos(self,fort_num,z_pos_list):
         # gets the pandas DataFrame rows with the z positions closest to z_pos_list
         df = self.getFort(fort_num)
