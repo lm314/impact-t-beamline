@@ -84,7 +84,7 @@ def block_negative_velocity(func):
     return wrapper
 
 class ImpactTBeamline:
-    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,has_particle_id=True):
+    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,has_particle_id=True,output_file=True):
         # settings is the dictionary output by the BeamlineConfiguration.gen method
         # gen is a distgen Generator
         self.settings = settings
@@ -98,11 +98,18 @@ class ImpactTBeamline:
             self.run_dir = os.getcwd()
         else:
             self.run_dir = run_dir
+                
         self.has_particle_id = has_particle_id
+        self.output_file = output_file
     
     def callImpactT(self):
         # calls IMPACT-T executable via mpirun
-        temp = subprocess.check_call(f"mpirun -n {self.num_process} {self.impact_exe_path} > output.txt",
+        if self.output_file:
+            cmd = f"mpirun -n {self.num_process} {self.impact_exe_path} > output.txt"
+        else:
+            cmd = f"mpirun -n {self.num_process} {self.impact_exe_path}"
+            
+        temp = subprocess.check_call(cmd,
                                       shell=True,
                                       cwd=self.run_dir,
                                       stdout=subprocess.DEVNULL,
@@ -122,7 +129,7 @@ class ImpactTBeamline:
         # copy the files needed to run the ImpactT.in file, e.g. rfdata1 or partcl.data
         for file in self.data_files:
             shutil.copy(os.path.join(DATA_DIR,file),self.run_dir)   
-    
+		
     def make_run_dir(self):
         # make the directory specified by self.run_dir
         if not os.path.exists(self.run_dir):
@@ -157,7 +164,7 @@ class ImpactTBeamline:
         # reads an IMPACT-T distribution file into a pandas DataFrame
         file_name = os.path.join(self.run_dir,f'fort.{fort_num}')
         return rd.read_GB(file_name)
-        
+	    
     def getFort_z_pos(self,fort_num,z_pos_list):
         # gets the pandas DataFrame rows with the z positions closest to z_pos_list
         df = self.getFort(fort_num)
@@ -173,8 +180,8 @@ class ImpactTBeamline:
             result.append(df.iloc[np.argmin(np.abs(z - z_pos))])
         
         return pd.DataFrame(result)
-        
-	def getFort_z_pos_cubic_spline(self,fort_num,z_pos_list,columns):
+	    
+    def getFort_z_pos_cubic_spline(self,fort_num,z_pos_list,columns):
         # gets the pandas columns at the z_pos_list positions using cubic 
         # splines to interpolate
         df = self.getFort(fort_num=fort_num)
@@ -189,8 +196,8 @@ class ImpactTBeamline:
         
         cs = CubicSpline(z, vals,extrapolate=False)
         
-        return cs(z_pos_list)  
-        
+        return cs(z_pos_list)
+    
     def get_distgen_settings(self):
         # get variables intented for the distgen file
             settings_combi = BeamlineConfiguration.split(self.settings)
