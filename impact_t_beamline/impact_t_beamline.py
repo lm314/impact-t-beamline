@@ -8,6 +8,7 @@ import inspect
 import pandas as pd
 from scipy.interpolate import CubicSpline
 
+from impact_input import ImpactIN
 from beamline_configuration import BeamlineConfiguration
 import pyPartAnalysis.read as rd
 
@@ -83,10 +84,10 @@ def block_negative_velocity(func):
     wrapper.__signature__ = inspect.signature(func)
     return wrapper
 
-class ImpactTBeamline:
-    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,has_particle_id=True,output_file=True):
+    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,editable_data_files=None,has_particle_id=True,output_file=True):
         # settings is the dictionary output by the BeamlineConfiguration.gen method
         # gen is a distgen Generator
+        # editable_data_files is a list of file name(s).
         self.settings = settings
         self.impact_file = impact_file
         self.gen = gen
@@ -94,6 +95,14 @@ class ImpactTBeamline:
         self.num_process = num_process
         self.impact_exe_path = impact_exe_path
         self.data_files = data_files
+        
+        if editable_data_files is None:
+            self.editable_data_files = editable_data_files
+        else:
+            self.editable_data_files = {}
+            for file in editable_data_files:
+                self.editable_data_files[file] = ImpactIN(filename=os.path.join(DATA_DIR,file),exclude_comments=True)
+                
         if run_dir is None:
             self.run_dir = os.getcwd()
         else:
@@ -129,6 +138,11 @@ class ImpactTBeamline:
         # copy the files needed to run the ImpactT.in file, e.g. rfdata1 or partcl.data
         for file in self.data_files:
             shutil.copy(os.path.join(DATA_DIR,file),self.run_dir)   
+        
+        if self.editable_data_files is not None:    
+            for file_name,file_edit in self.editable_data_files.items():
+                new_file = file_edit.replace(variables=self.get_ImpactTin_settings())
+                new_file.write(filename=os.path.join(self.run_dir,file_name))
 		
     def make_run_dir(self):
         # make the directory specified by self.run_dir
