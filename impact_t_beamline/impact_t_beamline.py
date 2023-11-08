@@ -83,7 +83,8 @@ def block_negative_velocity(func):
     # preserve arguments of func when chaining decorators
     wrapper.__signature__ = inspect.signature(func)
     return wrapper
-
+	
+class ImpactTBeamline:
     def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,editable_data_files=None,has_particle_id=True,output_file=True):
         # settings is the dictionary output by the BeamlineConfiguration.gen method
         # gen is a distgen Generator
