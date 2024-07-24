@@ -85,17 +85,18 @@ def block_negative_velocity(func):
     return wrapper
 	
 class ImpactTBeamline:
-    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,editable_data_files=None,has_particle_id=True,output_file=True):
+    def __init__ (self,settings,impact_file,gen=None,timeout=None,num_process=1,impact_exe_path=IMPACT_EXE_PATH,run_dir=None,data_files=None,editable_data_files=None,has_particle_id=True,output_file=True,KEinit=None,KEinit_settings_strings='KEinit'):
         # settings is the dictionary output by the BeamlineConfiguration.gen method
         # gen is a distgen Generator
         # editable_data_files is a list of file name(s).
         self.settings = settings
         self.impact_file = impact_file
-        self.gen = gen
         self.timeout = timeout
         self.num_process = num_process
         self.impact_exe_path = impact_exe_path
         self.data_files = data_files
+        self.KEinit = self.settings.get(KEinit_settings_strings,KEinit)
+        self.gen = gen
         
         if editable_data_files is None:
             self.editable_data_files = editable_data_files
@@ -159,7 +160,7 @@ class ImpactTBeamline:
         self.populateDataFiles()
         self.callImpactT()
    
-    def makeDist(self,file_name='partcl.data'):
+    def makeDist(self,file_name='partcl.data',KEinit=1.0):
         # generate a distribution file using distgen Generator of self.gen
         if self.gen is not None:
             distgen_settings = self.get_distgen_settings()
@@ -168,7 +169,10 @@ class ImpactTBeamline:
                 self.gen[key] = val
             pg = self.gen.run()
             pg.drift_to_t(pg['mean_t'])
-            pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id)
+            if self.KEinit is None
+                pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id)
+            else
+                pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id,cathode_kinetic_energy_ref=self.KEinit)
     
     def getFort(self,fort_num):
         # reads summary IMPACT-T file into a pandas DataFrame, i.e. not distribution files
