@@ -169,9 +169,9 @@ class ImpactTBeamline:
                 self.gen[key] = val
             pg = self.gen.run()
             pg.drift_to_t(pg['mean_t'])
-            if self.KEinit is None
+            if self.KEinit is None:
                 pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id)
-            else
+	    else:
                 pg.write_impact(os.path.join(self.run_dir,file_name),dev_branch=self.has_particle_id,cathode_kinetic_energy_ref=self.KEinit)
     
     def getFort(self,fort_num):
